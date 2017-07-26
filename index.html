@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="author" content="Christopher Waite">
+		<title>LD39</title>
+		<script src="/js/phaser.js"></script>
+		<script src="/js/Game.js"></script>
+		<link rel="stylesheet" type="text/css" href="/css/style.css" media="all" />
+	</head>
+	<body>
+		<script type="text/javascript">
+			window.onload = function() {
+				var game = new Phaser.Game("100%", "100%", Phaser.AUTO, '');
+				game.state.add("Game", Game);
+				game.state.start("Game");
+			};
+		</script>
+	</body>
+</html>
