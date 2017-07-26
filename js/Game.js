@@ -14,7 +14,7 @@ Game.prototype = {
     },
 
     preload: function() {
-        this.game.load.image("logo","/assets/images/phaser_logo.png");
+        this.game.load.image("logo","assets/images/phaser_logo.png");
     },
 
     create: function() {
