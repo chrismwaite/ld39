@@ -27,6 +27,7 @@ Game.prototype = {
 
         this.game.load.audio("rock1", "assets/sounds/rock1.wav");
         this.game.load.audio("mineSuccess", "assets/sounds/mine_success.wav");
+        this.game.load.audio("track1", "assets/music/ld39.wav");
     },
 
     create: function() {
@@ -56,9 +57,11 @@ Game.prototype = {
         this.game.rock_target_bounds = this.game.add.sprite((this.game.upstairs_background.x+(this.game.upstairs_background.width/2))-(rock_target_texture.width/2),(this.game.upstairs_background.y+(this.game.upstairs_background.height/2))-(rock_target_texture.height/2),"rockTarget");
         this.game.rock_target_bounds.visible = false;
 
-        //Sounds Effects
+        //Sounds Effects & Music
         this.game.sfx_rock1 = this.game.add.audio("rock1");
         this.game.sfx_strike_success = this.game.add.audio("mineSuccess");
+        this.game.music_ld39 = this.game.add.audio("track1",0.5,true);
+        this.game.music_ld39.play();
 
         //Text
         this.game.fuelLabel = this.game.add.text(this.game.furnace.sprite.x,this.game.furnace.sprite.y,this.game.furnace.fuel);
