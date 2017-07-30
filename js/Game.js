@@ -40,6 +40,7 @@ Game.prototype = {
         this.game.load.image("hammer","/assets/images/hammer.png");
         this.game.load.image("trapdoor","/assets/images/trapdoor.png");
         this.game.load.image("slime","/assets/images/slime.png");
+        this.game.load.image("coin","/assets/images/coin.png");
 
         //SFX
         this.game.load.audio("rock1", "assets/sounds/rock1.wav");
@@ -51,6 +52,7 @@ Game.prototype = {
         this.game.load.audio("slimeHit", "assets/sounds/slime_hit.wav");
         this.game.load.audio("slimeDead", "assets/sounds/slime_dead.wav");
         this.game.load.audio("hopperAccept", "assets/sounds/hopper.wav");
+        this.game.load.audio("reward", "assets/sounds/reward.wav");
 
         //Music
         this.game.load.audio("track1", "assets/music/ld39.wav");
@@ -123,6 +125,10 @@ Game.prototype = {
         this.game.lever.anchor.y = 1;
         this.game.lever.angle += -45;
 
+        this.game.reward_pos_x = this.game.tool_hammer.x;
+        this.game.reward_pos_y = (this.game.tool_hammer.y+this.game.tool_hammer.height)+10;
+        this.game.reward_count = 1;
+
         //Sounds Effects & Music
         this.game.sfx_rock1 = this.game.add.audio("rock1");
         this.game.sfx_strike_success = this.game.add.audio("mineSuccess");
@@ -133,6 +139,7 @@ Game.prototype = {
         this.game.sfx_slime_hit = this.game.add.audio("slimeHit");
         this.game.sfx_slime_dead = this.game.add.audio("slimeDead");
         this.game.sfx_hopper_accept = this.game.add.audio("hopperAccept");
+        this.game.sfx_reward = this.game.add.audio("reward");
         this.game.music_ld39 = this.game.add.audio("track1",0.5,true);
         
         //this.game.music_ld39.play();
@@ -214,6 +221,9 @@ Game.prototype = {
         }, this);
 
         this.game.time.events.loop(5000, this.slimeGenerator, this);
+
+        //reward loop
+        this.game.time.events.loop(60000, this.reward, this);
     },
 
     update: function() {
@@ -270,6 +280,21 @@ Game.prototype = {
             this.game.hopper.reset();
             //this.game.hopper.inventory = [];
             //this.game.hopper.level_sprite.scale.y = 0;
+        }
+    },
+
+    reward: function() {
+        if(this.game.furnace.fuel > 0) {
+            var posX = this.game.reward_pos_x;
+            var posY = this.game.reward_pos_y;
+            var coin = this.game.add.sprite(posX,posY,"coin");
+            this.game.sfx_reward.play();
+            this.game.reward_count++;
+            this.game.reward_pos_x += 27;
+            if((this.game.reward_count % 3) == 1) {
+                this.game.reward_pos_x = this.game.tool_pickaxe.x;
+                this.game.reward_pos_y += 25;
+            }
         }
     }
 };
