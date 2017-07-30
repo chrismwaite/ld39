@@ -37,6 +37,8 @@ Game.prototype = {
         this.game.load.image("toolSelected","/assets/images/tool_slected.png");
         this.game.load.image("pickaxe","/assets/images/pickaxe.png");
         this.game.load.image("hand","/assets/images/hand.png");
+        this.game.load.image("trapdoor","/assets/images/trapdoor.png");
+        this.game.load.image("slime","/assets/images/slime.png");
 
         //SFX
         this.game.load.audio("rock1", "assets/sounds/rock1.wav");
@@ -51,7 +53,8 @@ Game.prototype = {
     },
 
     create: function() {
-        this.game.rock_sprites = [];
+        //this.game.rock_sprites = [];
+        this.game.slimes = [];
         this.game.tools = ["pickaxe","hand"];
         this.game.selected_tool = "pickaxe";
 
@@ -88,6 +91,7 @@ Game.prototype = {
         this.game.lever_background = this.game.add.sprite(this.game.chute.x+40,(this.game.chute.y+this.game.chute.height)-80,"leverBG");
         this.game.lever = this.game.add.sprite(this.game.lever_background.x+17,(this.game.lever_background.y+this.game.lever_background.height)-8,"lever");
         this.game.lever_cover = this.game.add.sprite(this.game.lever_background.x+(this.game.lever_background.width/2)-lever_cover_texture.width/2,this.game.lever_background.y+(this.game.lever_background.height/2)-lever_cover_texture.height/2,"leverCover");
+        this.game.trapdoor = this.game.add.sprite((this.game.downstairs_background.x+this.game.downstairs_background.width)-210,(this.game.downstairs_background.y+this.game.downstairs_background.height)-75,"trapdoor");
 
         this.game.tool_pickaxe = this.game.add.sprite((this.game.upstairs_background.x-tool_blank_texture.width)-10,this.game.upstairs_background.y,"toolBlank");
         this.game.tool_pickaxe_selected = this.game.add.sprite(this.game.tool_pickaxe.x+5,this.game.tool_pickaxe.y+5,"toolSelected");
@@ -144,8 +148,9 @@ Game.prototype = {
         this.downstairs_background.body.collideWorldBounds = true;
         this.downstairs_background.body.immovable = true;
         this.downstairs_background.body.allowGravity = false;*/
-
+        
         //Events
+        this.game.add.tween(this.game.flame).to({alpha: 0.7}, 2000, Phaser.Easing.Linear.None, true, 0, 1000, true);
         this.game.vein.sprite.events.onInputUp.add(this.mine, this);
         this.game.time.events.loop(1000,this.game.furnace.useFuel, this.game.furnace);
         this.game.tool_pickaxe.events.onInputUp.add(function() {
@@ -180,11 +185,27 @@ Game.prototype = {
             this.game.tool_cursor.x = x;
             this.game.tool_cursor.y = y;
         }, this);
+
+        this.game.time.events.loop(5000, this.slimeGenerator, this);
     },
 
     update: function() {
-
+        this.game.slimes.forEach(function(slime) {
+            slime.update();
+        });
         //this.game.physics.arcade.collide(this.rock_sprites,this.downstairs_background);
+    },
+
+    slimeGenerator: function() {
+        //must be items in the bin
+        //cant be more than 1 slime out
+        if(this.game.bin.inventory.length > 0 && this.game.slimes.length < 1) {
+            var slime = new Slime(this.game, this.game.trapdoor.x - 50, this.game.trapdoor.y + 20);
+            this.game.slimes.push(slime);
+        }
+        else {
+            console.log("slime conditions not met");
+        }
     },
 
     mine: function() {
@@ -264,7 +285,8 @@ Rock = function(game, type, posX, posY) {
                     this.game.sfx_rejected.play();
                 }
                 this.sprite.destroy();
-                this.game.bin.inventory.pop();
+                var index = this.game.bin.inventory.indexOf(this);
+                this.game.bin.inventory.splice(index,1);
             }
             else {
                 this.sprite.x = this.originalPosX;
@@ -385,6 +407,57 @@ Furnace.prototype = {
             this.game.flame.scale.setTo(this.fuel/100,this.fuel/100);
         }
         this.game.sfx_stoke.play();
+    }
+};
+
+Slime = function(game, posX, posY) {
+    this.game = game;
+    this.sprite = this.game.add.sprite(posX,posY,"slime");
+    this.inventory = [];
+    this.direction = "left";
+};
+
+Slime.prototype = {
+    update: function() {
+        if(this.sprite) {
+            if(this.game.utility.insideBounds(this.sprite, this.game.bin.sprite) == true && this.direction == "left") {
+                //steal stuff
+                if(this.inventory.length < 1) {
+                    if(this.game.bin.inventory.length > 0) {
+                        var rock = this.game.bin.inventory[Math.floor(Math.random() * this.game.bin.inventory.length)];
+                        this.inventory.push(rock);
+                        var index = this.game.bin.inventory.indexOf(rock);
+                        this.game.bin.inventory.splice(index,1);
+                        rock.sprite.visible = false;
+                        this.direction = "right";
+                    }
+                    else {
+                        this.direction = "right";
+                    }
+                }
+                else {
+                    this.direction = "right";
+                }
+            }
+            else if(this.game.utility.insideBounds(this.sprite, this.game.trapdoor) == true && this.direction == "right") {
+                if(this.inventory.length >= 1) {
+                    var index = this.game.slimes.indexOf(this);
+                    this.game.slimes.splice(index,1);
+                    this.sprite.destroy();
+                }
+                else {
+                    this.direction = "left";
+                }
+            }
+            else {
+                if(this.direction == "left") {
+                    this.sprite.x=this.sprite.x-0.5;
+                }
+                else {
+                    this.sprite.x=this.sprite.x+0.5;
+                }
+            }
+        }
     }
 };
 
