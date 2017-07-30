@@ -56,9 +56,6 @@ Game.prototype = {
         this.game.load.audio("slimeDead", "assets/sounds/slime_dead.wav");
         this.game.load.audio("hopperAccept", "assets/sounds/hopper.wav");
         this.game.load.audio("reward", "assets/sounds/reward.wav");
-
-        //Music
-        this.game.load.audio("track1", "assets/music/ld39.wav");
     },
 
     create: function() {
@@ -151,10 +148,7 @@ Game.prototype = {
         this.game.sfx_slime_dead = this.game.add.audio("slimeDead");
         this.game.sfx_hopper_accept = this.game.add.audio("hopperAccept");
         this.game.sfx_reward = this.game.add.audio("reward");
-        this.game.music_ld39 = this.game.add.audio("track1",0.5,true);
         
-        //this.game.music_ld39.play();
-
         //Text
         //this.game.fuelLabel = this.game.add.text(this.game.furnace.sprite.x,this.game.furnace.sprite.y,this.game.furnace.fuel);
 
@@ -167,20 +161,6 @@ Game.prototype = {
         this.game.tool_hammer.inputEnabled = true;
         this.game.help.inputEnabled = true;
         this.game.gameover.inputEnabled = true;
-        
-        //Physics
-        /*this.game.physics.startSystem(Phaser.Physics.ARCADE);
-        this.game.physics.arcade.gravity.y = 100;
-
-        this.game.physics.enable(this.upstairs_foreground, Phaser.Physics.ARCADE);
-        this.upstairs_foreground.body.collideWorldBounds = true;
-        this.upstairs_foreground.body.immovable = true;
-        this.upstairs_foreground.body.allowGravity = false;
-
-        this.game.physics.enable(this.downstairs_background, Phaser.Physics.ARCADE);
-        this.downstairs_background.body.collideWorldBounds = true;
-        this.downstairs_background.body.immovable = true;
-        this.downstairs_background.body.allowGravity = false;*/
         
         //Events
         this.game.add.tween(this.game.flame).to({alpha: 0.7}, 2000, Phaser.Easing.Linear.None, true, 0, 1000, true);
@@ -267,7 +247,6 @@ Game.prototype = {
                 slime.update();
             });
         }
-        //this.game.physics.arcade.collide(this.rock_sprites,this.downstairs_background);
     },
 
     slimeGenerator: function() {
@@ -315,8 +294,6 @@ Game.prototype = {
             });
             //console.log(this.game.bin.inventory);
             this.game.hopper.reset();
-            //this.game.hopper.inventory = [];
-            //this.game.hopper.level_sprite.scale.y = 0;
         }
     },
 
@@ -441,11 +418,9 @@ Rock.prototype = {
         //var split_into = Math.floor((Math.random() * 2)+1);
         for(var x=0; x<2; x++) {
             this.game.vein.generateRock(["coal","rock"]);
-            //this.game.generateCoal();
         }
         this.sprite.input.disableDrag();
         this.sprite.destroy();
-        //need to remove from global coals array too for physics
     }
 };
 
@@ -470,9 +445,6 @@ Vein.prototype = {
         //console.log(type);
         var rock = new Rock(this.game, rock_types[type], posX, posY);
         this.game.rock_sprites.push(rock.sprite);
-        //this.rock_sprites.push(coal.coal_sprite);
-        //this.game.physics.enable(coal.coal_sprite, Phaser.Physics.ARCADE);
-        //coal.coal_sprite.body.collideWorldBounds = true;
     }
 };
 
