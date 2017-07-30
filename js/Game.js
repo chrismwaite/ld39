@@ -41,6 +41,9 @@ Game.prototype = {
         this.game.load.image("trapdoor","/assets/images/trapdoor.png");
         this.game.load.image("slime","/assets/images/slime.png");
         this.game.load.image("coin","/assets/images/coin.png");
+        this.game.load.image("tutorial","/assets/images/tutorial.png");
+        this.game.load.image("help","/assets/images/help.png");
+        this.game.load.image("gameover","/assets/images/gameover.png");
 
         //SFX
         this.game.load.audio("rock1", "assets/sounds/rock1.wav");
@@ -63,6 +66,7 @@ Game.prototype = {
         this.game.slimes = [];
         this.game.tools = ["pickaxe","hand","hammer"];
         this.game.selected_tool = "pickaxe";
+        this.game.custom_pause = false;
 
         //Utility
         this.game.utility = new Utility();
@@ -81,9 +85,10 @@ Game.prototype = {
         var upstairs_pipe_texture = this.game.cache.getImage("upstairsPipe");
         var lever_cover_texture = this.game.cache.getImage("leverCover");
         var tool_blank_texture = this.game.cache.getImage("toolBlank");
+        var gameover_texture = this.game.cache.getImage("gameover");
 
         //Sprites & Entities
-        this.game.downstairs_background = this.game.add.sprite((this.game.width/2)-(downstairs_bg_texture.width/2),this.game.height/2,"downstairsBG");
+        this.game.downstairs_background = this.game.add.sprite((this.game.width/2)-(downstairs_bg_texture.width/2),(this.game.height/2)-((downstairs_bg_texture.height-upstairs_bg_texture.height)/2),"downstairsBG");
         this.game.upstairs_background = this.game.add.sprite((this.game.width/2)-(upstairs_bg_texture.width/2),(this.game.downstairs_background.y-upstairs_bg_texture.height)-20,"upstairsBG");
         this.game.vein = new Vein(this.game, (this.game.upstairs_background.x+upstairs_bg_texture.width)-vein_texture.width-5,(this.game.upstairs_background.y+upstairs_bg_texture.height)-vein_texture.height-5,"vein");
         this.game.upstairs_foreground = this.game.add.sprite((this.game.width/2)-(upstairs_fg_texture.width/2),this.game.upstairs_background.y+5,"upstairsFG");
@@ -111,6 +116,10 @@ Game.prototype = {
         this.game.tool_hammer_selected = this.game.add.sprite(this.game.tool_hammer.x+5,this.game.tool_hammer.y+5,"toolSelected");
         this.game.hammer = this.game.add.sprite(this.game.tool_hammer_selected.x+5,this.game.tool_hammer_selected.y+5,"hammer");
 
+        this.game.help = this.game.add.sprite(this.game.upstairs_background.x+this.game.upstairs_background.width+10,this.game.upstairs_background.y,"help");
+        this.game.tutorial = this.game.add.sprite(this.game.upstairs_background.x-125,this.game.upstairs_background.y+10,"tutorial");
+        this.game.gameover = this.game.add.sprite((this.game.upstairs_background.x+(this.game.upstairs_background.width/2))-gameover_texture.width/2,this.game.upstairs_background.y+120,"gameover");
+
         this.game.tool_cursor = this.game.add.sprite(this.game.input.activePointer.x,this.game.input.activePointer.y,"pickaxe");
 
         this.game.rock_target_bounds.visible = false;
@@ -118,6 +127,8 @@ Game.prototype = {
         this.game.tool_pickaxe_selected.visible = true;
         this.game.tool_hand_selected.visible = false;
         this.game.tool_hammer_selected.visible = false;
+        this.game.tutorial.visible = false;
+        this.game.gameover.visible = false;
 
         this.game.flame.anchor.x = 0.5;
         this.game.flame.anchor.y = 1;
@@ -154,6 +165,8 @@ Game.prototype = {
         this.game.tool_pickaxe.inputEnabled = true;
         this.game.tool_hand.inputEnabled = true;
         this.game.tool_hammer.inputEnabled = true;
+        this.game.help.inputEnabled = true;
+        this.game.gameover.inputEnabled = true;
         
         //Physics
         /*this.game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -172,7 +185,7 @@ Game.prototype = {
         //Events
         this.game.add.tween(this.game.flame).to({alpha: 0.7}, 2000, Phaser.Easing.Linear.None, true, 0, 1000, true);
         this.game.vein.sprite.events.onInputUp.add(this.mine, this);
-        this.game.time.events.loop(1000,this.game.furnace.useFuel, this.game.furnace);
+        this.game.fuel_loop = this.game.time.events.loop(1000,this.game.furnace.useFuel, this.game.furnace);
         
         this.game.tool_pickaxe.events.onInputUp.add(function() {
             this.game.selected_tool = "pickaxe";
@@ -220,16 +233,34 @@ Game.prototype = {
             this.game.tool_cursor.y = y;
         }, this);
 
-        this.game.time.events.loop(5000, this.slimeGenerator, this);
+        this.game.help.events.onInputUp.add(function() {
+            if(this.game.tutorial.visible == true) {
+                this.pause(false);
+                this.game.tutorial.visible = false;
+            }
+            else {
+                this.pause(true);
+                this.game.tutorial.visible = true;
+            }
+        }, this);
+
+        this.game.gameover.events.onInputUp.add(function() {
+            this.pause(false);
+            this.game.state.start("Game");
+        }, this);
+
+        this.game.slime_loop = this.game.time.events.loop(5000, this.slimeGenerator, this);
 
         //reward loop
-        this.game.time.events.loop(60000, this.reward, this);
+        this.game.reward_loop = this.game.time.events.loop(30000, this.reward, this);
     },
 
     update: function() {
-        this.game.slimes.forEach(function(slime) {
-            slime.update();
-        });
+        if(this.game.custom_pause == false) {
+            this.game.slimes.forEach(function(slime) {
+                slime.update();
+            });
+        }
         //this.game.physics.arcade.collide(this.rock_sprites,this.downstairs_background);
     },
 
@@ -295,6 +326,37 @@ Game.prototype = {
                 this.game.reward_pos_x = this.game.tool_pickaxe.x;
                 this.game.reward_pos_y += 25;
             }
+        }
+    },
+
+    pause: function(status) {
+        //Pause
+        if(status == true) {
+            this.game.custom_pause = true;
+
+            this.game.time.events.pause();
+
+            this.game.vein.sprite.inputEnabled = false;
+            this.game.bin.sprite.inputEnabled = false;
+            this.game.lever.inputEnabled = false;
+            this.game.tool_pickaxe.inputEnabled = false;
+            this.game.tool_hand.inputEnabled = false;
+            this.game.tool_hammer.inputEnabled = false;
+        }
+        //Resume
+        else {
+            this.game.custom_pause = false;
+
+            this.game.time.events.resume();
+            
+            this.game.vein.sprite.inputEnabled = true;
+            this.game.bin.sprite.inputEnabled = true;
+            this.game.lever.inputEnabled = true;
+            this.game.tool_pickaxe.inputEnabled = true;
+            this.game.tool_hand.inputEnabled = true;
+            this.game.tool_hammer.inputEnabled = true;
+            this.game.help.inputEnabled = true;
+            this.game.gameover.inputEnabled = true;
         }
     }
 };
@@ -451,6 +513,18 @@ Furnace.prototype = {
         }
         else {
             //game over
+            this.game.gameover.visible = true;
+
+            this.game.custom_pause = true;
+
+            this.game.time.events.pause();
+
+            this.game.vein.sprite.inputEnabled = false;
+            this.game.bin.sprite.inputEnabled = false;
+            this.game.lever.inputEnabled = false;
+            this.game.tool_pickaxe.inputEnabled = false;
+            this.game.tool_hand.inputEnabled = false;
+            this.game.tool_hammer.inputEnabled = false;
         }
     },
     addFuel: function(amount) {
