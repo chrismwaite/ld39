@@ -540,6 +540,8 @@ Furnace.prototype = {
 Slime = function(game, posX, posY) {
     this.game = game;
     this.sprite = this.game.add.sprite(posX,posY,"slime");
+    this.sprite.alpha = 0;
+    this.game.add.tween(this.sprite).to({alpha: 1}, 500, Phaser.Easing.Linear.None, true);
     this.inventory = [];
     this.direction = "left";
     this.strikes = 0;
