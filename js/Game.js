@@ -37,6 +37,7 @@ Game.prototype = {
         this.game.load.image("toolSelected","/assets/images/tool_slected.png");
         this.game.load.image("pickaxe","/assets/images/pickaxe.png");
         this.game.load.image("hand","/assets/images/hand.png");
+        this.game.load.image("hammer","/assets/images/hammer.png");
         this.game.load.image("trapdoor","/assets/images/trapdoor.png");
         this.game.load.image("slime","/assets/images/slime.png");
 
@@ -55,7 +56,7 @@ Game.prototype = {
     create: function() {
         //this.game.rock_sprites = [];
         this.game.slimes = [];
-        this.game.tools = ["pickaxe","hand"];
+        this.game.tools = ["pickaxe","hand","hammer"];
         this.game.selected_tool = "pickaxe";
 
         //Utility
@@ -101,12 +102,17 @@ Game.prototype = {
         this.game.tool_hand_selected = this.game.add.sprite(this.game.tool_hand.x+5,this.game.tool_hand.y+5,"toolSelected");
         this.game.hand = this.game.add.sprite(this.game.tool_hand_selected.x+5,this.game.tool_hand_selected.y+5,"hand");
 
+        this.game.tool_hammer = this.game.add.sprite((this.game.upstairs_background.x-tool_blank_texture.width)-10,this.game.tool_hand.y+this.game.tool_pickaxe.height+10,"toolBlank");
+        this.game.tool_hammer_selected = this.game.add.sprite(this.game.tool_hammer.x+5,this.game.tool_hammer.y+5,"toolSelected");
+        this.game.hammer = this.game.add.sprite(this.game.tool_hammer_selected.x+5,this.game.tool_hammer_selected.y+5,"hammer");
+
         this.game.tool_cursor = this.game.add.sprite(this.game.input.activePointer.x,this.game.input.activePointer.y,"pickaxe");
 
         this.game.rock_target_bounds.visible = false;
         this.game.bin.sprite.visible = false;
         this.game.tool_pickaxe_selected.visible = true;
         this.game.tool_hand_selected.visible = false;
+        this.game.tool_hammer_selected.visible = false;
 
         this.game.flame.anchor.x = 0.5;
         this.game.flame.anchor.y = 1;
@@ -134,6 +140,7 @@ Game.prototype = {
         this.game.lever.inputEnabled = true;
         this.game.tool_pickaxe.inputEnabled = true;
         this.game.tool_hand.inputEnabled = true;
+        this.game.tool_hammer.inputEnabled = true;
         
         //Physics
         /*this.game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -153,20 +160,34 @@ Game.prototype = {
         this.game.add.tween(this.game.flame).to({alpha: 0.7}, 2000, Phaser.Easing.Linear.None, true, 0, 1000, true);
         this.game.vein.sprite.events.onInputUp.add(this.mine, this);
         this.game.time.events.loop(1000,this.game.furnace.useFuel, this.game.furnace);
+        
         this.game.tool_pickaxe.events.onInputUp.add(function() {
             this.game.selected_tool = "pickaxe";
             this.game.tool_hand_selected.visible = false;
+            this.game.tool_hammer_selected.visible = false;
             this.game.tool_pickaxe_selected.visible = true;
             this.game.tool_cursor.destroy();
             this.game.tool_cursor = this.game.add.sprite(this.game.input.activePointer.x,this.game.input.activePointer.y,"pickaxe");
         }, this);
+        
         this.game.tool_hand.events.onInputUp.add(function() {
             this.game.selected_tool = "hand";
             this.game.tool_pickaxe_selected.visible = false;
+            this.game.tool_hammer_selected.visible = false;
             this.game.tool_hand_selected.visible = true;
             this.game.tool_cursor.destroy();
             this.game.tool_cursor = this.game.add.sprite(this.game.input.activePointer.x,this.game.input.activePointer.y,"hand");
         }, this);
+        
+        this.game.tool_hammer.events.onInputUp.add(function() {
+            this.game.selected_tool = "hammer";
+            this.game.tool_pickaxe_selected.visible = false;
+            this.game.tool_hand_selected.visible = false;
+            this.game.tool_hammer_selected.visible = true;
+            this.game.tool_cursor.destroy();
+            this.game.tool_cursor = this.game.add.sprite(this.game.input.activePointer.x,this.game.input.activePointer.y,"hammer");
+        }, this);
+
         this.game.lever.events.onInputUp.add(function() {
             var rotate_right = this.game.add.tween(this.game.lever).to({angle: 45}, 500, Phaser.Easing.Linear.None);
             var rotate_left = this.game.add.tween(this.game.lever).to({angle: -45}, 250, Phaser.Easing.Linear.None);
@@ -204,7 +225,7 @@ Game.prototype = {
             this.game.slimes.push(slime);
         }
         else {
-            console.log("slime conditions not met");
+            //console.log("slime conditions not met");
         }
     },
 
@@ -225,7 +246,7 @@ Game.prototype = {
     transferCoal: function() {
         if(this.game.selected_tool == "hand") {
             var bin = this.game.bin;
-            console.log(this.game.hopper.inventory);
+            //console.log(this.game.hopper.inventory);
             this.game.hopper.inventory.forEach(function(coal) {
                 bin.inventory.push(coal);
 
@@ -239,7 +260,7 @@ Game.prototype = {
                 coal.originalPosY = posY;
                 coal.room = "downstairs";
             });
-            console.log(this.game.bin.inventory);
+            //console.log(this.game.bin.inventory);
             this.game.hopper.reset();
             //this.game.hopper.inventory = [];
             //this.game.hopper.level_sprite.scale.y = 0;
@@ -261,7 +282,7 @@ Rock = function(game, type, posX, posY) {
     this.sprite.input.enableDrag(true);
     this.sprite.events.onDragStop.add(function(argument) {
         if(this.room == "upstairs") {
-            if(this.game.utility.insideBounds(this.game.input.activePointer, this.game.hopper.sprite) == true && this.game.hopper.inventory.length < this.game.hopper.capacity && this.game.selected_tool == "hand") {
+            if(this.game.utility.insideBounds(this.game.input.activePointer, this.game.hopper.sprite) == true && this.game.hopper.inventory.length < this.game.hopper.capacity && this.game.selected_tool == "hand" && this.type != "breakableRock") {
                 this.game.hopper.inventory.push(this);
                 this.game.hopper.level_sprite.scale.y = this.game.hopper.inventory.length * (1/this.game.hopper.capacity);
                 this.sprite.visible = false;
@@ -302,12 +323,12 @@ Rock = function(game, type, posX, posY) {
 
 Rock.prototype = {
     strike: function() {
-        if(this.game.selected_tool == "pickaxe") {
+        if(this.game.selected_tool == "hammer") {
             if(this.type == "breakableRock") {
                 if(this.strikes > 2) {
                     this.game.sfx_strike_success.play();
                     this.split();
-                    this.strikes = 0
+                    this.strikes = 0;
                 }
                 else {
                     this.game.sfx_rock1.play();
@@ -346,7 +367,7 @@ Vein.prototype = {
         }
 
         var type = Math.floor(Math.random() * rock_types.length);
-        console.log(type);
+        //console.log(type);
         var rock = new Rock(this.game, rock_types[type], posX, posY);
         //this.rock_sprites.push(coal.coal_sprite);
         //this.game.physics.enable(coal.coal_sprite, Phaser.Physics.ARCADE);
@@ -415,6 +436,10 @@ Slime = function(game, posX, posY) {
     this.sprite = this.game.add.sprite(posX,posY,"slime");
     this.inventory = [];
     this.direction = "left";
+    this.strikes = 0;
+
+    this.sprite.inputEnabled = true;
+    this.sprite.events.onInputUp.add(this.strike, this);
 };
 
 Slime.prototype = {
@@ -426,6 +451,7 @@ Slime.prototype = {
                     if(this.game.bin.inventory.length > 0) {
                         var rock = this.game.bin.inventory[Math.floor(Math.random() * this.game.bin.inventory.length)];
                         this.inventory.push(rock);
+                        //console.log(this.inventory.length);
                         var index = this.game.bin.inventory.indexOf(rock);
                         this.game.bin.inventory.splice(index,1);
                         rock.sprite.visible = false;
@@ -456,6 +482,33 @@ Slime.prototype = {
                 else {
                     this.sprite.x=this.sprite.x+0.5;
                 }
+            }
+        }
+    },
+    strike: function() {
+        if(this.game.selected_tool == "hammer") {
+            if(this.strikes > 3) {
+                if(this.inventory.length > 0) {
+                    var slime_x = this.sprite.x;
+                    var slime_y = this.sprite.y;
+                    this.inventory.forEach(function(rock) {
+                        rock.sprite.x = slime_x;
+                        rock.sprite.y = slime_y;
+                        rock.originalPosX = slime_x;
+                        rock.originalPosY = slime_y;
+                        rock.sprite.visible = true;
+                    });
+                }
+                //this.game.sfx_strike_success.play();
+                //this.split();
+                this.strikes = 0;
+                var index = this.game.slimes.indexOf(this);
+                this.game.slimes.splice(index,1);
+                this.sprite.destroy();
+            }
+            else {
+                //this.game.sfx_rock1.play();
+                this.strikes++;
             }
         }
     }
