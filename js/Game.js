@@ -62,7 +62,7 @@ Game.prototype = {
     },
 
     create: function() {
-        //this.game.rock_sprites = [];
+        this.game.rock_sprites = [];
         this.game.slimes = [];
         this.game.tools = ["pickaxe","hand","hammer"];
         this.game.selected_tool = "pickaxe";
@@ -236,10 +236,16 @@ Game.prototype = {
         this.game.help.events.onInputUp.add(function() {
             if(this.game.tutorial.visible == true) {
                 this.pause(false);
+                this.game.rock_sprites.forEach(function(rock) {
+                    rock.visible = true;
+                });
                 this.game.tutorial.visible = false;
             }
             else {
                 this.pause(true);
+                this.game.rock_sprites.forEach(function(rock) {
+                    rock.visible = false;
+                });
                 this.game.tutorial.visible = true;
             }
         }, this);
@@ -266,8 +272,8 @@ Game.prototype = {
 
     slimeGenerator: function() {
         //must be items in the bin
-        //cant be more than 1 slime out
-        if(this.game.bin.inventory.length > 0 && this.game.slimes.length < 1) {
+        //cant be more than 2 slimes out
+        if(this.game.bin.inventory.length > 0 && this.game.slimes.length < 2) {
             var slime = new Slime(this.game, this.game.trapdoor.x - 50, this.game.trapdoor.y + 20);
             this.game.slimes.push(slime);
         }
@@ -463,6 +469,7 @@ Vein.prototype = {
         var type = Math.floor(Math.random() * rock_types.length);
         //console.log(type);
         var rock = new Rock(this.game, rock_types[type], posX, posY);
+        this.game.rock_sprites.push(rock.sprite);
         //this.rock_sprites.push(coal.coal_sprite);
         //this.game.physics.enable(coal.coal_sprite, Phaser.Physics.ARCADE);
         //coal.coal_sprite.body.collideWorldBounds = true;
@@ -513,6 +520,10 @@ Furnace.prototype = {
         }
         else {
             //game over
+            this.game.rock_sprites.forEach(function(rock) {
+                rock.visible = false;
+            });
+
             this.game.gameover.visible = true;
 
             this.game.custom_pause = true;
@@ -525,6 +536,37 @@ Furnace.prototype = {
             this.game.tool_pickaxe.inputEnabled = false;
             this.game.tool_hand.inputEnabled = false;
             this.game.tool_hammer.inputEnabled = false;
+
+            //show coins won
+            var pos_x = this.game.gameover.x+15;
+            var pos_y = this.game.gameover.y+65;
+            var tweens = [];
+            var max_per_row = 14;
+
+            //place coins, hide them, and build tweens
+            for(var i=1; i<this.game.reward_count; i++) {
+                var temp_sprite = this.game.add.sprite(pos_x,pos_y,"coin");
+                temp_sprite.alpha = 0;
+                var temp_tween = this.game.add.tween(temp_sprite).to({alpha: 1}, 250, Phaser.Easing.Linear.None);
+                var game = this.game;
+                temp_tween.onComplete.add(function() {
+                    game.sfx_reward.play();
+                });
+                tweens.push(temp_tween);
+                if((i % max_per_row+1) == 1) {
+                    pos_y+=25;
+                    pos_x=this.game.gameover.x+15;
+                }
+                else {
+                    pos_x+=25;
+                }
+            }
+
+            //chain tweens and play them
+            for(var x=0; x<tweens.length-1; x++) {
+                tweens[x].chain(tweens[x+1]);
+            }
+            tweens[0].start();
         }
     },
     addFuel: function(amount) {
