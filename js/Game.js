@@ -117,7 +117,7 @@ Game.prototype = {
         this.game.hammer = this.game.add.sprite(this.game.tool_hammer_selected.x+5,this.game.tool_hammer_selected.y+5,"hammer");
 
         this.game.help = this.game.add.sprite(this.game.upstairs_background.x+this.game.upstairs_background.width+10,this.game.upstairs_background.y,"help");
-        this.game.tutorial = this.game.add.sprite(this.game.upstairs_background.x-125,this.game.upstairs_background.y+10,"tutorial");
+        this.game.tutorial = this.game.add.sprite(this.game.upstairs_background.x-125,this.game.upstairs_background.y-45,"tutorial");
         this.game.gameover = this.game.add.sprite((this.game.upstairs_background.x+(this.game.upstairs_background.width/2))-gameover_texture.width/2,this.game.upstairs_background.y+120,"gameover");
 
         this.game.tool_cursor = this.game.add.sprite(this.game.input.activePointer.x,this.game.input.activePointer.y,"pickaxe");
