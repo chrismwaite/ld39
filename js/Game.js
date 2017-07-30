@@ -48,6 +48,9 @@ Game.prototype = {
         this.game.load.audio("switch", "assets/sounds/switch.wav");
         this.game.load.audio("rocksFalling", "assets/sounds/rocks_falling.wav");
         this.game.load.audio("rejected", "assets/sounds/rejected.wav");
+        this.game.load.audio("slimeHit", "assets/sounds/slime_hit.wav");
+        this.game.load.audio("slimeDead", "assets/sounds/slime_dead.wav");
+        this.game.load.audio("hopperAccept", "assets/sounds/hopper.wav");
 
         //Music
         this.game.load.audio("track1", "assets/music/ld39.wav");
@@ -127,6 +130,9 @@ Game.prototype = {
         this.game.sfx_switch = this.game.add.audio("switch");
         this.game.sfx_falling_rocks = this.game.add.audio("rocksFalling");
         this.game.sfx_rejected = this.game.add.audio("rejected");
+        this.game.sfx_slime_hit = this.game.add.audio("slimeHit");
+        this.game.sfx_slime_dead = this.game.add.audio("slimeDead");
+        this.game.sfx_hopper_accept = this.game.add.audio("hopperAccept");
         this.game.music_ld39 = this.game.add.audio("track1",0.5,true);
         
         //this.game.music_ld39.play();
@@ -283,6 +289,7 @@ Rock = function(game, type, posX, posY) {
     this.sprite.events.onDragStop.add(function(argument) {
         if(this.room == "upstairs") {
             if(this.game.utility.insideBounds(this.game.input.activePointer, this.game.hopper.sprite) == true && this.game.hopper.inventory.length < this.game.hopper.capacity && this.game.selected_tool == "hand" && this.type != "breakableRock") {
+                this.game.sfx_hopper_accept.play();
                 this.game.hopper.inventory.push(this);
                 this.game.hopper.level_sprite.scale.y = this.game.hopper.inventory.length * (1/this.game.hopper.capacity);
                 this.sprite.visible = false;
@@ -499,15 +506,14 @@ Slime.prototype = {
                         rock.sprite.visible = true;
                     });
                 }
-                //this.game.sfx_strike_success.play();
-                //this.split();
+                this.game.sfx_slime_dead.play();
                 this.strikes = 0;
                 var index = this.game.slimes.indexOf(this);
                 this.game.slimes.splice(index,1);
                 this.sprite.destroy();
             }
             else {
-                //this.game.sfx_rock1.play();
+                this.game.sfx_slime_hit.play();
                 this.strikes++;
             }
         }
